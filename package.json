@@ -1,0 +1,35 @@
+{
+  "name": "vue-wheel-spinner",
+  "version": "0.2.0",
+  "description": "A Vue.js component that provides wheel spinner",
+  "main": "src/main.js",
+  "scripts": {
+    "build": "vite build"
+  },
+  "author": {
+    "name": "İlyas Özkurt",
+    "email": "ilyasozkurt@gmail.com"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@vitejs/plugin-vue": "^5.0.5",
+    "vue": "^3.4.21"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://ilyasozkurt/vue-wheel-spinner.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ilyasozkurt/vue-wheel-spinner/issues"
+  },
+  "keywords": [
+    "vue",
+    "custom",
+    "wheel",
+    "spinner",
+    "wheel of fortune"
+  ],
+  "devDependencies": {
+    "vite": "^5.2.8"
+  }
+}
