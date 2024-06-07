@@ -34,6 +34,10 @@ const props = defineProps({
     type: Number,
     default: 0
   },
+  extraSpins: {
+    type: Number,
+    default: 10
+  },
   spinDuration: {
     type: Number,
     default: 4000
@@ -93,18 +97,22 @@ function getNormalizedAngle(angle) {
   return angle % 360;
 }
 
-function getSliceAngles(sliceIndex) {
+function getSliceAngles(sliceIndex, currentCanvasAngle) {
 
   const slices = getSlices();
   const anglePerSlice = 360 / slices.length;
-  const startAngle = getNormalizedAngle(currentAngle.value + anglePerSlice * sliceIndex);
-  const endAngle = getNormalizedAngle(startAngle + anglePerSlice);
+  const startAngle = getNormalizedAngle(currentCanvasAngle + (anglePerSlice * sliceIndex));
+  const endAngle = getNormalizedAngle(currentCanvasAngle + startAngle + anglePerSlice);
 
   return {
     startAngle,
     endAngle
   }
 
+}
+
+function getEaseInOutQuart(progress) {
+  return progress < 0.5 ? 8 * Math.pow(progress, 4) : 1 - Math.pow(-2 * progress + 2, 4) / 2;
 }
 
 function drawSlice(context, centerX, centerY, radius, startAngle, endAngle, fillColor) {
@@ -179,10 +187,14 @@ function spinWheel(winnerIndex) {
   // Set spinning true
   isSpinning.value = true;
 
+  // Emit spin start event
+  emits('spin-start');
+
+  // Get canvas and container
   const canvas = playgroundCanvas.value;
 
   // Get random spins count
-  const extraSpins = 10;
+  const extraSpins = props.extraSpins;
 
   // Get random spins count
   const extraSpinsAngle = extraSpins * 360;
@@ -191,7 +203,7 @@ function spinWheel(winnerIndex) {
   const {
     startAngle: winnerStartAngle,
     endAngle: winnerEndAngle
-  } = getSliceAngles(winnerIndex);
+  } = getSliceAngles(winnerIndex, currentAngle.value);
 
   // Calculate target angle
   const targetAngle = currentAngle.value + extraSpinsAngle + (getCursorAngle() - winnerEndAngle) + getRandomBetween(0, getAnglePerSlice());
@@ -201,27 +213,27 @@ function spinWheel(winnerIndex) {
 
   // Create animation
   const animate = (currentTime) => {
+
     const elapsedTime = currentTime - startTime;
     const progress = Math.min(elapsedTime / props.spinDuration, 1);
-    const easing = (t) => {
-      if (t < 0.5) {
-        return 4 * t * t * t;
-      } else {
-        return (--t) * t * t * 4 + 1;
-      }
-    };
 
-    let rotationAngle = currentAngle.value + (targetAngle * easing(progress));
+    let rotationAngle = currentAngle.value + (targetAngle * getEaseInOutQuart(progress));
     canvas.style.transform = `rotate(${rotationAngle}deg)`;
 
     if (progress < 1) {
+
       requestAnimationFrame(animate);
+
     } else {
+
       rotationAngle = getNormalizedAngle(rotationAngle);
       canvas.style.transform = `rotate(${rotationAngle}deg)`;
-      currentAngle.value = rotationAngle
+      currentAngle.value = rotationAngle;
+
       isSpinning.value = false;
+
       emits('spin-end', winnerIndex);
+
     }
 
   };
@@ -239,6 +251,10 @@ onBeforeMount(() => {
 
 onMounted(() => {
   drawWheel(playgroundContainer.value, playgroundCanvas.value);
+});
+
+defineExpose({
+  spinWheel
 });
 
 </script>
@@ -300,6 +316,3 @@ canvas {
   transform: scale(0.9);
 }
 </style>
-
-
-
