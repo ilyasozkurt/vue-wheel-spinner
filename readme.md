@@ -2,6 +2,8 @@
 
 A customizable wheel spinner component built with Vue.js.
 
+![image](https://github.com/ilyasozkurt/vue-wheel-spinner/assets/4955440/08cb6195-60eb-4ac4-82cb-2a4b5296dc5e)
+
 ## Table of Contents
 
 - [Installation](#installation)
