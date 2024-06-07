@@ -60,6 +60,8 @@ export default {
         { color: '#00FF00', text: 'Prize 2' },
         { color: '#0000FF', text: 'Prize 3' },
         { color: '#FFFF00', text: 'Prize 4' },
+        { color: '#FFA500', text: 'Prize 5' },
+        { color: '#800080', text: 'Prize 6' }
       ],
       winnerIndex: 0,
       spinDuration: 4000,
