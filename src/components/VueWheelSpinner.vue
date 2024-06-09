@@ -1,12 +1,23 @@
 <template>
   <div class="wheel-wrapper" ref="playgroundContainer">
     <canvas ref="playgroundCanvas"></canvas>
-    <div class="spin-button-container">
-      <div class="needle"></div>
+    <div
+        class="spin-button-container"
+        :style="{'width': `${spinButtonSize}%`, 'height': `${spinButtonSize}%`}">
+      <div
+          class="needle"
+          :style="needleStyle"
+      ></div>
       <button
           class="spin-button"
-          :style="{'backgroundColor': spinButtonBackgroundColor, 'color': spinButtonLabelColor}"
-          @click="spinWheel(winnerIndex)">
+          :disabled="isSpinning"
+          :style="{
+            'backgroundColor': spinButtonBackgroundColor,
+            'color': spinButtonLabelColor
+          }"
+          @mouseover="handleSpinButtonHover"
+          @mouseleave="handleSpinButtonLeave"
+          @click="handleSpinButtonClick">
         {{ spinButtonLabel }}
       </button>
     </div>
@@ -14,12 +25,17 @@
 </template>
 
 <script setup>
-import {defineEmits, onBeforeMount, onMounted, ref} from 'vue';
+import {computed, defineExpose, onBeforeMount, onBeforeUnmount, onMounted, ref} from 'vue';
 
 const playgroundContainer = ref(null)
 const playgroundCanvas = ref(null);
 const currentAngle = ref(0);
 const isSpinning = ref(false);
+const spinButtonClickAudio = ref(null);
+const spinButtonHoverAudio = ref(null);
+const spinButtonLeaveAudio = ref(null);
+const spinningAudio = ref(null);
+const wonAudio = ref(null);
 const emits = defineEmits([
   'spin-start',
   'spin-end'
@@ -46,6 +62,10 @@ const props = defineProps({
     type: String,
     default: 'Spin'
   },
+  spinButtonSize: {
+    type: Number,
+    default: 20
+  },
   spinButtonBackgroundColor: {
     type: String,
     default: '#eaeaea'
@@ -53,8 +73,47 @@ const props = defineProps({
   spinButtonLabelColor: {
     type: String,
     default: '#000'
-  }
+  },
+  needleBackgroundColor: {
+    type: String,
+    default: '#fff'
+  },
+  needleScale: {
+    type: Number,
+    default: 1
+  },
+  sounds: {
+    type: Object,
+    default: () => {
+      return {
+        spinButtonClick: null,
+        spinButtonHover: null,
+        spinButtonLeave: null,
+        spinning: () => null,
+        won: () => null
+      }
+    }
+  },
 });
+
+function handleSpinButtonClick() {
+  if (spinButtonClickAudio.value) {
+    playAudio(spinButtonClickAudio.value)
+  }
+  spinWheel(props.winnerIndex);
+}
+
+function handleSpinButtonHover() {
+  if (spinButtonHoverAudio.value) {
+    playAudio(spinButtonHoverAudio.value)
+  }
+}
+
+function handleSpinButtonLeave() {
+  if (spinButtonLeaveAudio.value) {
+    playAudio(spinButtonLeaveAudio.value)
+  }
+}
 
 function degreesToRadians(degrees) {
   return degrees * (Math.PI / 180);
@@ -147,12 +206,15 @@ function drawWheel(container, canvas) {
   // Access canvas and context.
   const context = canvas.getContext('2d');
 
-  canvas.width = container.clientWidth;
-  canvas.height = container.clientHeight;
+  const containerWidth = container.clientWidth;
+  const containerHeight = container.clientWidth;
+
+  canvas.width = containerWidth;
+  canvas.height = containerHeight;
 
   // Adjust width and height
-  const width = container.clientWidth;
-  const height = container.clientHeight;
+  const width = containerWidth;
+  const height = containerHeight;
   context.scale(1, 1);
 
   // Calculate centroids
@@ -187,6 +249,11 @@ function spinWheel(winnerIndex) {
   // Set spinning true
   isSpinning.value = true;
 
+  // Play spinning sound
+  if (spinningAudio.value) {
+    playAudio(spinningAudio.value, true);
+  }
+
   // Emit spin start event
   emits('spin-start');
 
@@ -201,7 +268,6 @@ function spinWheel(winnerIndex) {
 
   // Get winner start and end angle with current status
   const {
-    startAngle: winnerStartAngle,
     endAngle: winnerEndAngle
   } = getSliceAngles(winnerIndex, currentAngle.value);
 
@@ -232,7 +298,16 @@ function spinWheel(winnerIndex) {
 
       isSpinning.value = false;
 
+      if (wonAudio.value) {
+        wonAudio.value.play();
+      }
+
       emits('spin-end', winnerIndex);
+
+      // Stop spinning sound
+      if (spinningAudio.value) {
+        stopAudio(spinningAudio.value);
+      }
 
     }
 
@@ -243,14 +318,66 @@ function spinWheel(winnerIndex) {
 
 }
 
+function playAudio(audio) {
+  if (audio) {
+    audio.volume = 0.5
+    audio.play();
+  }
+}
+
+function stopAudio(audio) {
+  if (audio) {
+    audio.pause();
+    audio.currentTime = 0;
+  }
+}
+
+const needleStyle = computed(() => {
+  const scaleBase = 10;
+  return {
+    borderLeft: Math.round(scaleBase * props.needleScale) + 'px solid transparent',
+    borderRight: Math.round(scaleBase * props.needleScale) + 'px solid transparent',
+    borderBottom: Math.round(scaleBase * props.needleScale * 2) + 'px solid ' + props.needleBackgroundColor,
+  };
+});
+
 onBeforeMount(() => {
   window.addEventListener('resize', () => {
+    console.log('resize');
+    drawWheel(playgroundContainer.value, playgroundCanvas.value);
+  });
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', () => {
     drawWheel(playgroundContainer.value, playgroundCanvas.value);
   });
 });
 
 onMounted(() => {
+
+  if (props.sounds?.spinning) {
+    spinningAudio.value = new Audio(props.sounds?.spinning);
+  }
+
+  if (props.sounds?.spinButtonClick) {
+    spinButtonClickAudio.value = new Audio(props.sounds?.spinButtonClick);
+  }
+
+  if (props.sounds?.spinButtonHover) {
+    spinButtonHoverAudio.value = new Audio(props.sounds?.spinButtonHover);
+  }
+
+  if (props.sounds?.spinButtonLeave) {
+    spinButtonLeaveAudio.value = new Audio(props.sounds?.spinButtonLeave);
+  }
+
+  if (props.sounds?.won) {
+    wonAudio.value = new Audio(props.sounds?.won);
+  }
+
   drawWheel(playgroundContainer.value, playgroundCanvas.value);
+
 });
 
 defineExpose({
@@ -261,15 +388,20 @@ defineExpose({
 
 <style scoped>
 .wheel-wrapper {
+  max-width: 100vw;
+  width: 100%;
   position: relative;
-  width: 500px;
-  height: 500px;
   aspect-ratio: 1 / 1;
   margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
 canvas {
-  will-change: transform;
+  will-change: transform, width, height;
+  aspect-ratio: 1 / 1;
 }
 
 .needle {
@@ -293,19 +425,23 @@ canvas {
 }
 
 .spin-button {
-  width: 50px;
-  height: 50px;
+  width: 100%;
+  height: 100%;
   background: red;
   color: white;
   border: none;
   border-radius: 50%;
-  font-size: 14px;
+  font-size: 1rem;
   font-weight: bold;
   cursor: pointer;
   outline: none;
   z-index: 10;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
   transition: transform 0.3s ease;
+}
+
+.spin-button:disabled {
+  pointer-events: none;
 }
 
 .spin-button:hover {
