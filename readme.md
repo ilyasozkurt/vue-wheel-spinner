@@ -12,6 +12,9 @@ A customizable wheel spinner component built with Vue.js.
 - [Events](#events)
 - [License](#license)
 
+[Demo](https://vue-wheel-spinner-demo.vercel.app/)
+[Demo Project Source](https://stackblitz.com/~/github.com/ilyasozkurt/vue-wheel-spinner)
+
 ## Installation
 
 To use this component, you need to have a Vue.js project set up. If you don't have one, you can create a new Vue.js
