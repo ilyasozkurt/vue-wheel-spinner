@@ -210,6 +210,9 @@ Import and register the component in your Vue component:
 | `slices`                    | Array  | required   | Array of slice objects. Each slice object should have `color` and `text` properties. |
 | `winnerIndex`               | Number | 0          | Index of the slice that will be the winner.                                          |
 | `spinDuration`              | Number | 4000       | Duration of the spin animation in milliseconds.                                      |
+| `cursorAngle`               | Number | 0          | Angle of the cursor.                                                                 |
+| `cursorPosition`            | String | 'edge'     | Position of the cursor. Can be 'edge' or 'center'.                                   |
+| `cursorDistance`            | Number | 0          | Distance of the cursor from the center or edge. It's depending to cursorPosition     |
 | `sounds`                    | Object | {}         | Object of sound files.                                                               |
 | `sounds.won`                | String | null       | Sound file for the winning event.                                                    |
 | `sounds.spinning`           | String | null       | Sound file for the spinning event.                                                   |
