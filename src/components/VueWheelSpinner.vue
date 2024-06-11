@@ -1,41 +1,26 @@
 <template>
   <div class="wheel-wrapper" ref="playgroundContainer">
+    <div ref="cursor" class="cursor">
+      <slot name="cursor"></slot>
+    </div>
     <canvas ref="playgroundCanvas"></canvas>
-    <div
-        class="spin-button-container"
-        :style="{'width': `${spinButtonSize}%`, 'height': `${spinButtonSize}%`}">
-      <div
-          class="needle"
-          :style="needleStyle"
-      ></div>
-      <button
-          class="spin-button"
-          :disabled="isSpinning"
-          :style="{
-            'backgroundColor': spinButtonBackgroundColor,
-            'color': spinButtonLabelColor
-          }"
-          @mouseover="handleSpinButtonHover"
-          @mouseleave="handleSpinButtonLeave"
-          @click="handleSpinButtonClick">
-        {{ spinButtonLabel }}
-      </button>
+    <div class="centered">
+      <slot></slot>
     </div>
   </div>
 </template>
 
 <script setup>
-import {computed, defineExpose, onBeforeMount, onBeforeUnmount, onMounted, ref} from 'vue';
+import {onBeforeMount, onBeforeUnmount, onMounted, ref, watch} from 'vue';
 
 const playgroundContainer = ref(null)
 const playgroundCanvas = ref(null);
-const currentAngle = ref(0);
 const isSpinning = ref(false);
-const spinButtonClickAudio = ref(null);
-const spinButtonHoverAudio = ref(null);
-const spinButtonLeaveAudio = ref(null);
+const cursor = ref(null);
+const currentAngle = ref(0);
 const spinningAudio = ref(null);
 const wonAudio = ref(null);
+
 const emits = defineEmits([
   'spin-start',
   'spin-end'
@@ -58,62 +43,28 @@ const props = defineProps({
     type: Number,
     default: 4000
   },
-  spinButtonLabel: {
-    type: String,
-    default: 'Spin'
-  },
-  spinButtonSize: {
+  cursorAngle: {
     type: Number,
-    default: 20
+    default: 270
   },
-  spinButtonBackgroundColor: {
+  cursorPosition: {
     type: String,
-    default: '#eaeaea'
+    default: 'center'
   },
-  spinButtonLabelColor: {
-    type: String,
-    default: '#000'
-  },
-  needleBackgroundColor: {
-    type: String,
-    default: '#fff'
-  },
-  needleScale: {
+  cursorDistance: {
     type: Number,
-    default: 1
+    default: 50
   },
   sounds: {
     type: Object,
     default: () => {
       return {
-        spinButtonClick: null,
-        spinButtonHover: null,
-        spinButtonLeave: null,
         spinning: () => null,
         won: () => null
       }
     }
   },
 });
-
-function handleSpinButtonClick() {
-  if (spinButtonClickAudio.value) {
-    playAudio(spinButtonClickAudio.value)
-  }
-  spinWheel(props.winnerIndex);
-}
-
-function handleSpinButtonHover() {
-  if (spinButtonHoverAudio.value) {
-    playAudio(spinButtonHoverAudio.value)
-  }
-}
-
-function handleSpinButtonLeave() {
-  if (spinButtonLeaveAudio.value) {
-    playAudio(spinButtonLeaveAudio.value)
-  }
-}
 
 function degreesToRadians(degrees) {
   return degrees * (Math.PI / 180);
@@ -143,7 +94,7 @@ function getAnglePerSlice() {
 }
 
 function getCursorAngle() {
-  return 270;
+  return props.cursorAngle;
 }
 
 function getRandomBetween(min, max) {
@@ -179,6 +130,7 @@ function drawSlice(context, centerX, centerY, radius, startAngle, endAngle, fill
   context.beginPath();
   context.moveTo(centerX, centerY);
   context.arc(centerX, centerY, radius, degreesToRadians(startAngle), degreesToRadians(endAngle));
+  context.strokeStyle = fillColor;
   context.stroke();
   context.fillStyle = fillColor;
   context.fill();
@@ -199,8 +151,18 @@ function drawLabel(context, centerX, centerY, radius, startAngle, endAngle, fill
   context.restore();
 }
 
-function drawWheel(container, canvas) {
+function getContainer() {
+  return playgroundContainer.value;
+}
 
+function getCanvas() {
+  return playgroundCanvas.value;
+}
+
+function drawWheel() {
+
+  const container = getContainer();
+  const canvas = getCanvas();
   const slices = getSlices();
 
   // Access canvas and context.
@@ -236,6 +198,9 @@ function drawWheel(container, canvas) {
     // Draw slice label
     drawLabel(context, centerX, centerY, radius, startAngle, endAngle, slice.color, slice.text);
   });
+
+  // Position cursor
+  positionCursor();
 
 }
 
@@ -332,26 +297,84 @@ function stopAudio(audio) {
   }
 }
 
-const needleStyle = computed(() => {
-  const scaleBase = 10;
-  return {
-    borderLeft: Math.round(scaleBase * props.needleScale) + 'px solid transparent',
-    borderRight: Math.round(scaleBase * props.needleScale) + 'px solid transparent',
-    borderBottom: Math.round(scaleBase * props.needleScale * 2) + 'px solid ' + props.needleBackgroundColor,
-  };
+function getCursorXY() {
+
+  const cursorAngle = getCursorAngle();
+  const cursorPosition = props.cursorPosition;
+
+  if (cursorPosition === 'edge') {
+
+    const rotate = getNormalizedAngle(cursorAngle + 90);
+    const cursorWidth = cursor.value.clientWidth;
+    const cursorHeight = cursor.value.clientHeight;
+    const top = Math.sin(degreesToRadians(cursorAngle)) * 50 + 50 + '%';
+    const left = Math.cos(degreesToRadians(cursorAngle)) * 50 + 50 + '%';
+    const additionalX = (Math.cos(degreesToRadians(cursorAngle)) * (props.cursorDistance + (cursorWidth / 2)));
+    const additionalY = (Math.sin(degreesToRadians(cursorAngle)) * (props.cursorDistance + (cursorHeight / 2)));
+
+    return {
+      top: top,
+      left: left,
+      translateX: 'calc(-50% - ' + additionalX + 'px)',
+      translateY: 'calc(-50% - ' + additionalY + 'px)',
+      rotate: rotate + 'deg'
+    }
+
+  } else {
+
+    const rotate = getNormalizedAngle(cursorAngle + 270);
+    const additionalX = Math.cos(degreesToRadians(cursorAngle)) * props.cursorDistance;
+    const additionalY = Math.sin(degreesToRadians(cursorAngle)) * props.cursorDistance;
+
+    return {
+      top: '50%',
+      left: '50%',
+      translateX: 'calc(-50% + ' + additionalX + 'px)',
+      translateY: 'calc(-50% + ' + additionalY + 'px)',
+      rotate: rotate + 'deg'
+    }
+
+  }
+
+}
+
+function positionCursor() {
+
+  // Set cursor position
+  const {top, left, translateX, translateY, rotate} = getCursorXY();
+
+  cursor.value.style.top = top;
+  cursor.value.style.left = left;
+  cursor.value.style.transform = `translate(${translateX}, ${translateY}) rotate(${rotate})`;
+
+}
+
+function handleResize() {
+  drawWheel();
+}
+
+watch(() => props.slices, () => {
+  drawWheel();
+});
+
+watch(() => props.cursorAngle, () => {
+  positionCursor();
+});
+
+watch(() => props.cursorPosition, () => {
+  positionCursor();
+});
+
+watch(() => props.cursorDistance, () => {
+  positionCursor();
 });
 
 onBeforeMount(() => {
-  window.addEventListener('resize', () => {
-    console.log('resize');
-    drawWheel(playgroundContainer.value, playgroundCanvas.value);
-  });
+  window.addEventListener('resize', handleResize);
 });
 
 onBeforeUnmount(() => {
-  window.removeEventListener('resize', () => {
-    drawWheel(playgroundContainer.value, playgroundCanvas.value);
-  });
+  window.removeEventListener('resize', handleResize);
 });
 
 onMounted(() => {
@@ -360,33 +383,25 @@ onMounted(() => {
     spinningAudio.value = new Audio(props.sounds?.spinning);
   }
 
-  if (props.sounds?.spinButtonClick) {
-    spinButtonClickAudio.value = new Audio(props.sounds?.spinButtonClick);
-  }
-
-  if (props.sounds?.spinButtonHover) {
-    spinButtonHoverAudio.value = new Audio(props.sounds?.spinButtonHover);
-  }
-
-  if (props.sounds?.spinButtonLeave) {
-    spinButtonLeaveAudio.value = new Audio(props.sounds?.spinButtonLeave);
-  }
-
   if (props.sounds?.won) {
     wonAudio.value = new Audio(props.sounds?.won);
   }
 
-  drawWheel(playgroundContainer.value, playgroundCanvas.value);
+  drawWheel();
+
+  positionCursor();
 
 });
 
 defineExpose({
-  spinWheel
+  spinWheel,
+  drawWheel
 });
 
 </script>
 
 <style scoped>
+
 .wheel-wrapper {
   max-width: 100vw;
   width: 100%;
@@ -396,59 +411,25 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+}
+
+.cursor {
+  position: absolute;
+  z-index: 10;
+}
+
+.centered {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 11;
 }
 
 canvas {
   will-change: transform, width, height;
   aspect-ratio: 1 / 1;
+  max-width: 100%;
 }
 
-.needle {
-  position: absolute;
-  bottom: calc(100% - 5px);
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-left: 10px solid transparent;
-  border-right: 10px solid transparent;
-  border-bottom: 20px solid #ffffff;
-  transform: translateX(-50%);
-  z-index: -1;
-}
-
-.spin-button-container {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-
-.spin-button {
-  width: 100%;
-  height: 100%;
-  background: red;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  font-size: 1rem;
-  font-weight: bold;
-  cursor: pointer;
-  outline: none;
-  z-index: 10;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-  transition: transform 0.3s ease;
-}
-
-.spin-button:disabled {
-  pointer-events: none;
-}
-
-.spin-button:hover {
-  transform: scale(1.1);
-}
-
-.spin-button:active {
-  transform: scale(0.9);
-}
 </style>
