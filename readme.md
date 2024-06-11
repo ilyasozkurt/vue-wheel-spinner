@@ -12,9 +12,8 @@ A customizable wheel spinner component built with Vue.js.
 - [Slots](#slots)
 - [Events](#events)
 - [License](#license)
-
-[Demo](https://vue-wheel-spinner-demo.vercel.app/)
-[Demo Project Source](https://stackblitz.com/~/github.com/ilyasozkurt/vue-wheel-spinner)
+- [Demo](https://vue-wheel-spinner-demo.vercel.app/)
+- [Demo Project Source](https://stackblitz.com/~/github.com/ilyasozkurt/vue-wheel-spinner)
 
 ## Installation
 
