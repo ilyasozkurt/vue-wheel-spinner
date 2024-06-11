@@ -9,6 +9,7 @@ A customizable wheel spinner component built with Vue.js.
 - [Installation](#installation)
 - [Usage](#usage)
 - [Props](#props)
+- [Slots](#slots)
 - [Events](#events)
 - [License](#license)
 
@@ -37,49 +38,43 @@ npm install vue-wheel-spinner
 Import and register the component in your Vue component:
 
 ```vue
+
 <template>
 
-  <div class="wheel">
-    <div class="wheel-state">
-      <div v-if="winnerResult">
-        Winner: <span :style="{'color': winnerResult.color}">{{ winnerResult.text }}</span> 🎉
-      </div>
-      <div v-else-if="isSpinning">
-        Spinning...
-      </div>
-      <div v-else>
-        Ready to spin?
-      </div>
-    </div>
-    <VueWheelSpinner
-        ref="spinner"
-        :slices="slices"
-        :winner-index="winnerIndex"
-        :spin-duration="spinDuration"
-        :spin-button-label="spinButtonLabel"
-        :spin-button-size="spinButtonSize"
-        :spin-button-background-color="spinButtonBackgroundColor"
-        :spin-button-label-color="spinButtonLabelColor"
-        :needle-background-color="needleBackgroundColor"
-        :needle-scale="needleScale"
-        :is-spinning="isSpinning"
-        :sounds="sounds"
-        @spin-start="onSpinStart"
-        @spin-end="onSpinEnd"
-    />
-  </div>
+  <VueWheelSpinner
+      ref="spinner"
+      :slices="slices"
+      :winner-index="defaultWinner"
+      :sounds="sounds"
+      :cursor-angle="cursorAngle"
+      :cursor-position="cursorPosition"
+      :cursor-distance="cursorDistance"
+      @spin-start="onSpinStart"
+      @spin-end="onSpinEnd">
 
-  <div>
-    <button v-for="(slice, index) in slices" :disabled="isSpinning" @click="spinFor(index)">
-      Win for {{ slice.text }}
-    </button>
-  </div>
+    <template #cursor>
+      <img class="cursor-img" :src="cursorImage" alt="Cursor">
+    </template>
+
+    <template #default>
+      <button
+          class="spin-button"
+          :disabled="isSpinning"
+          @click="handleSpinButtonClick"
+          @mouseover="handleSpinButtonHover"
+          @mouseleave="handleSpinButtonLeave">
+        Spin
+      </button>
+    </template>
+
+  </VueWheelSpinner>
 
 </template>
 
 <script>
   import VueWheelSpinner from 'vue-wheel-spinner';
 
+  import cursorImage from './assets/cursor.svg';
   import wonSound from './sounds/won.mp3';
   import clickSound from './sounds/click.mp3';
   import hoverSound from './sounds/hover.mp3';
@@ -94,34 +89,53 @@ Import and register the component in your Vue component:
       return {
         winnerResult: null,
         slices: [
-          {color: '#FF0000', text: 'Prize 1'},
-          {color: '#00FF00', text: 'Prize 2'},
-          {color: '#0000FF', text: 'Prize 3'},
-          {color: '#FFFF00', text: 'Prize 4'},
-          {color: '#FFA500', text: 'Prize 5'},
-          {color: '#800080', text: 'Prize 6'},
+          {color: '#eb4d4b', text: 'Slice 1'},
+          {color: '#f0932b', text: 'Slice 2'},
+          {color: '#f9ca24', text: 'Slice 3'},
+          {color: '#badc58', text: 'Slice 4'},
+          {color: '#7ed6df', text: 'Slice 5'},
+          {color: '#e056fd', text: 'Slice 6'}
         ],
-        winnerIndex: 1,
-        spinDuration: 4000,
         isSpinning: false,
-        spinButtonLabel: 'Spin',
-        spinButtonSize: 20,
-        spinButtonBackgroundColor: '#fff',
-        spinButtonLabelColor: '#000',
-        needleBackgroundColor: '#fff',
-        needleScale: 1.5,
+        defaultWinner: 0,
         sounds: {
           won: wonSound,
           spinButtonClick: clickSound,
           spinButtonHover: hoverSound,
           spinButtonLeave: leaveSound,
           spinning: spinningSound
-        }
+        },
+        cursorImage,
+        cursorAngle: 0,
+        cursorPosition: 'edge',
+        cursorDistance: 0
       };
     },
     methods: {
+      playAudio(audio) {
+        if (audio) {
+          audio.volume = 0.5
+          audio.play();
+        }
+      },
+      handleSpinButtonClick() {
+        if (this.buttonClickAudio) {
+          this.playAudio(this.buttonClickAudio)
+        }
+        this.$refs.spinner.spinWheel(this.defaultWinner);
+      },
+      handleSpinButtonHover() {
+        if (this.buttonHoverAudio) {
+          this.playAudio(this.buttonHoverAudio)
+        }
+      },
+      handleSpinButtonLeave() {
+        if (this.buttonLeaveAudio) {
+          this.playAudio(this.buttonLeaveAudio)
+        }
+      },
       spinFor(index) {
-        this.winnerIndex = index;
+        this.defaultWinner = index;
         this.$refs.spinner.spinWheel(index);
       },
       onSpinStart() {
@@ -132,9 +146,61 @@ Import and register the component in your Vue component:
         this.isSpinning = false;
         this.winnerResult = this.slices[winnerIndex];
       }
+    },
+    mounted() {
+      this.buttonHoverAudio = new Audio(hoverSound);
+      this.buttonLeaveAudio = new Audio(leaveSound);
+      this.buttonClickAudio = new Audio(clickSound);
     }
   };
 </script>
+
+<style>
+
+  .cursor-img {
+    width: 50px;
+    aspect-ratio: 1 / 1;
+    filter: drop-shadow(3px 3px 2px rgba(0, 0, 0, 0.19));
+  }
+
+  .spin-button {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto;
+    aspect-ratio: 1 / 1;
+    font-size: 20px;
+    cursor: pointer;
+    background: #eb4d4b;
+    border-radius: 50%;
+    transition: all 150ms;
+    border: 10px solid white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: white !important;
+    box-shadow: inset -3px -3px 2px 2px rgba(0, 0, 0, 0.19), 3px 3px 2px 2px rgba(0, 0, 0, 0.19);
+    z-index: 11;
+    position: relative;
+    user-select: none;
+
+    &:hover {
+      box-shadow: inset -5px -5px 2px 2px rgba(0, 0, 0, 0.19), 3px 3px 2px 2px rgba(0, 0, 0, 0.19);
+    }
+
+    &:active {
+      box-shadow: inset 3px 3px 2px 2px rgba(0, 0, 0, 0.19), 3px 3px 2px 2px rgba(0, 0, 0, 0.19);
+    }
+
+    &:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+  }
+
+</style>
 ```
 
 ## Props
@@ -144,19 +210,16 @@ Import and register the component in your Vue component:
 | `slices`                    | Array  | required   | Array of slice objects. Each slice object should have `color` and `text` properties. |
 | `winnerIndex`               | Number | 0          | Index of the slice that will be the winner.                                          |
 | `spinDuration`              | Number | 4000       | Duration of the spin animation in milliseconds.                                      |
-| `spinButtonLabel`           | String | 'Spin'     | Label of the spin button.                                                            |
-| `spinButtonBackgroundColor` | String | '#eaeaea' | Background color of the spin button.                                                 |
-| `spinButtonLabelColor`      | String | '#000'     | Text color of the spin button.                                                       |
-| `spinButtonSize`            | Number | 20         | Button size of the spin button with container percentage. 20%                        |
-| `needleBackgroundColor`     | String | '#fff'     | Background color of the needle.                                                      |
-| `needleScale`               | Number | 1.5        | Scale of the needle.                                                                 |
 | `sounds`                    | Object | {}         | Object of sound files.                                                               |
 | `sounds.won`                | String | null       | Sound file for the winning event.                                                    |
-| `sounds.spinButtonClick`    | String | null       | Sound file for the spin button click event.                                          |
-| `sounds.spinButtonHover`    | String | null       | Sound file for the spin button hover event.                                          |
-| `sounds.spinButtonLeave`    | String | null       | Sound file for the spin button leave event.                                          |
 | `sounds.spinning`           | String | null       | Sound file for the spinning event.                                                   |
 
+## Slots
+
+| Slot         | Description                                                |
+|--------------|------------------------------------------------------------|
+| `cursor`     | Slot for the cursor element. Mostly an image like a cursor |
+| `default`    | Slot for centered content. Mostly a circle spin button     |
 
 ## Events
 
