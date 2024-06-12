@@ -189,6 +189,7 @@ function drawWheel() {
 
   // Draw slices
   slices.forEach(function (slice, sliceIndex) {
+
     const startAngle = anglePerSlice * sliceIndex;
     const endAngle = startAngle + anglePerSlice;
 
@@ -197,6 +198,7 @@ function drawWheel() {
 
     // Draw slice label
     drawLabel(context, centerX, centerY, radius, startAngle, endAngle, slice.color, slice.text);
+
   });
 
   // Position cursor
@@ -249,7 +251,7 @@ function spinWheel(winnerIndex) {
     const progress = Math.min(elapsedTime / props.spinDuration, 1);
 
     let rotationAngle = currentAngle.value + (targetAngle * getEaseInOutQuart(progress));
-    canvas.style.transform = `rotate(${rotationAngle}deg)`;
+    canvas.style.transform = `rotate3d(0, 0, 1, ${rotationAngle}deg)`;
 
     if (progress < 1) {
 
@@ -258,7 +260,7 @@ function spinWheel(winnerIndex) {
     } else {
 
       rotationAngle = getNormalizedAngle(rotationAngle);
-      canvas.style.transform = `rotate(${rotationAngle}deg)`;
+      canvas.style.transform = `rotate3d(0, 0, 1, ${rotationAngle}deg)`;
       currentAngle.value = rotationAngle;
 
       isSpinning.value = false;
@@ -345,7 +347,7 @@ function positionCursor() {
 
   cursor.value.style.top = top;
   cursor.value.style.left = left;
-  cursor.value.style.transform = `translate(${translateX}, ${translateY}) rotate(${rotate})`;
+  cursor.value.style.transform = `translate3d(${translateX}, ${translateY}, 0) rotate3d(0, 0, 1, ${rotate})`;
 
 }
 
@@ -388,8 +390,6 @@ onMounted(() => {
   }
 
   drawWheel();
-
-  positionCursor();
 
 });
 
