@@ -43,6 +43,8 @@ Import and register the component in your Vue component:
   <VueWheelSpinner
       ref="spinner"
       :slices="slices"
+      :slice-font-style="sliceFontStyle"
+      :slice-text-position="sliceTextPosition"
       :winner-index="defaultWinner"
       :sounds="sounds"
       :cursor-angle="cursorAngle"
@@ -88,13 +90,15 @@ Import and register the component in your Vue component:
       return {
         winnerResult: null,
         slices: [
-          {color: '#eb4d4b', text: 'Slice 1'},
-          {color: '#f0932b', text: 'Slice 2'},
-          {color: '#f9ca24', text: 'Slice 3'},
-          {color: '#badc58', text: 'Slice 4'},
-          {color: '#7ed6df', text: 'Slice 5'},
-          {color: '#e056fd', text: 'Slice 6'}
+          {color: '#eb4d4b', text: 'Slice 1', textColor: '#000000'},
+          {color: '#f0932b', text: 'Slice 2', textColor: '#ffffff'},
+          {color: '#f9ca24', text: 'Slice 3', textColor: '#000000'},
+          {color: '#badc58', text: 'Slice 4', textColor: '#ffffff'},
+          {color: '#7ed6df', text: 'Slice 5', textColor: '#000000'},
+          {color: '#e056fd', text: 'Slice 6', textColor: '#ffffff'},
         ],
+        sliceFontStyle: 'bold 16px Arial',
+        sliceTextPosition: 'edge',
         isSpinning: false,
         defaultWinner: 0,
         sounds: {
@@ -207,6 +211,8 @@ Import and register the component in your Vue component:
 | Prop                        | Type   | Default    | Description                                                                          |
 |-----------------------------|--------|------------|--------------------------------------------------------------------------------------|
 | `slices`                    | Array  | required   | Array of slice objects. Each slice object should have `color` and `text` properties. |
+| `sliceFontStyle`            | String | 'bold 16px Arial' | Font style for the slice text.                                                       |
+| `sliceTextPosition`         | String | 'edge'     | Position of the slice text. Can be 'edge', 'center' or 'middle'.                      |
 | `winnerIndex`               | Number | 0          | Index of the slice that will be the winner.                                          |
 | `spinDuration`              | Number | 4000       | Duration of the spin animation in milliseconds.                                      |
 | `cursorAngle`               | Number | 0          | Angle of the cursor.                                                                 |
