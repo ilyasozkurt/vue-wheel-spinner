@@ -1,6 +1,6 @@
 {
   "name": "vue-wheel-spinner",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "description": "A Vue.js component that provides wheel spinner",
   "main": "src/main.js",
   "homepage": "https://github.com/ilyasozkurt/vue-wheel-spinner",
