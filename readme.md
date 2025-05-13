@@ -43,6 +43,8 @@ Import and register the component in your Vue component:
   <VueWheelSpinner
       ref="spinner"
       :slices="slices"
+      :slice-font-style="sliceFontStyle"
+      :slice-text-position="sliceTextPosition"
       :winner-index="defaultWinner"
       :sounds="sounds"
       :cursor-angle="cursorAngle"
@@ -88,13 +90,15 @@ Import and register the component in your Vue component:
       return {
         winnerResult: null,
         slices: [
-          {color: '#eb4d4b', text: 'Slice 1'},
-          {color: '#f0932b', text: 'Slice 2'},
-          {color: '#f9ca24', text: 'Slice 3'},
-          {color: '#badc58', text: 'Slice 4'},
-          {color: '#7ed6df', text: 'Slice 5'},
-          {color: '#e056fd', text: 'Slice 6'}
+          {color: '#eb4d4b', text: 'Slice 1', textColor: '#000000'},
+          {color: '#f0932b', text: 'Slice 2', textColor: '#ffffff'},
+          {color: '#f9ca24', text: 'Slice 3', textColor: '#000000'},
+          {color: '#badc58', text: 'Slice 4', textColor: '#ffffff'},
+          {color: '#7ed6df', text: 'Slice 5', textColor: '#000000'},
+          {color: '#e056fd', text: 'Slice 6', textColor: '#ffffff'},
         ],
+        sliceFontStyle: 'bold 16px Arial',
+        sliceTextPosition: 'edge',
         isSpinning: false,
         defaultWinner: 0,
         sounds: {
@@ -207,6 +211,8 @@ Import and register the component in your Vue component:
 | Prop                        | Type   | Default    | Description                                                                          |
 |-----------------------------|--------|------------|--------------------------------------------------------------------------------------|
 | `slices`                    | Array  | required   | Array of slice objects. Each slice object should have `color` and `text` properties. |
+| `sliceFontStyle`            | String | 'bold 16px Arial' | Font style for the slice text.                                                       |
+| `sliceTextPosition`         | String | 'edge'     | Position of the slice text. Can be 'edge', 'center' or 'middle'.                      |
 | `winnerIndex`               | Number | 0          | Index of the slice that will be the winner.                                          |
 | `spinDuration`              | Number | 4000       | Duration of the spin animation in milliseconds.                                      |
 | `cursorAngle`               | Number | 0          | Angle of the cursor.                                                                 |
@@ -233,22 +239,3 @@ Import and register the component in your Vue component:
 
 ## License
 This project is licensed under the MIT License.
-
-
-## Additions
-I have added a few more props to make the wheel more customizable:
-`font`, `textPosition`, `textColor` in `slices`, so the props become (added ones are on the top):
-| Prop                        | Type   | Default          | Description                                                                          |
-|-----------------------------|--------|------------------|--------------------------------------------------------------------------------------|
-| `font`                      | String | 'bold 16px Arial'| includes the font-weight, font-size, font-family. Takes 'bold 16px Arial' by default.|
-| `textPosition`              | String | 'edge'           | Position of the text on the slice. Can be 'edge', 'middle', 'center'.                |
-| `slices`                    | Array  | required         | Array of slice objects. Each slice object should have `color` and `text` properties. |
-|                             |        |                  |`textColor` is not required. If not added, the contrast of `color` will be default.   |
-| `winnerIndex`               | Number | 0                | Index of the slice that will be the winner.                                          |
-| `spinDuration`              | Number | 4000             | Duration of the spin animation in milliseconds.                                      |
-| `cursorAngle`               | Number | 0                | Angle of the cursor.                                                                 |
-| `cursorPosition`            | String | 'edge'           | Position of the cursor. Can be 'edge' or 'center'.                                   |
-| `cursorDistance`            | Number | 0                | Distance of the cursor from the center or edge. It's depending to cursorPosition     |
-| `sounds`                    | Object | {}               | Object of sound files.                                                               |
-| `sounds.won`                | String | null             | Sound file for the winning event.                                                    |
-| `sounds.spinning`           | String | null             | Sound file for the spinning event.                                                   |
