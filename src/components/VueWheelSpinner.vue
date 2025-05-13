@@ -31,6 +31,14 @@ const props = defineProps({
     type: Array,
     required: true
   },
+  sliceFontStyle: {
+    type: String,
+    default: 'bold 16px Arial'
+  },
+  sliceTextPosition: {
+    type: String,
+    default: 'edge'
+  },
   winnerIndex: {
     type: Number,
     default: 0
@@ -63,14 +71,6 @@ const props = defineProps({
         won: () => null
       }
     }
-  },
-  font: {
-    type: String,
-    default: 'bold 16px Arial'
-  },
-  textPosition: {
-    type: String,
-    default: 'edge'
   },
 });
 
@@ -146,25 +146,23 @@ function drawSlice(context, centerX, centerY, radius, startAngle, endAngle, fill
   context.save();
 }
 
-function drawLabel(context, centerX, centerY, radius, startAngle, endAngle, fillColor, sliceLabel, textColor, textPosition, font) {
+function drawLabel(context, centerX, centerY, radius, startAngle, endAngle, fillColor, sliceLabel, sliceTextColor, sliceTextPosition, sliceFontStyle) {
   // Draw label
   const textRotateAngle = (endAngle - startAngle) / 2 + startAngle;
   context.translate(centerX, centerY);
   context.rotate(degreesToRadians(textRotateAngle));
   context.textAlign = 'right';
   context.textBaseline = 'middle';
-  context.fillStyle = textColor || getContrastingColor(fillColor);
-  context.font = font;
-  if (textPosition === 'edge') {
-    context.fillText(sliceLabel, radius - 10 , 0);
-  } else if (textPosition === 'center') {
-    context.fillText(sliceLabel, 3 * radius / 4 , 0);
-  }
-  else if (textPosition === 'middle') {
-    context.fillText(sliceLabel, radius / 2 , 0);
-  }
-  else {
-    context.fillText(sliceLabel, radius - 10 , 0);
+  context.fillStyle = sliceTextColor || getContrastingColor(fillColor);
+  context.font = sliceFontStyle;
+  if (sliceTextPosition === 'edge') {
+    context.fillText(sliceLabel, radius - 10, 0);
+  } else if (sliceTextPosition === 'center') {
+    context.fillText(sliceLabel, 3 * radius / 4, 0);
+  } else if (sliceTextPosition === 'middle') {
+    context.fillText(sliceLabel, radius / 2, 0);
+  } else {
+    context.fillText(sliceLabel, radius - 10, 0);
   }
   context.restore();
 }
@@ -215,7 +213,7 @@ function drawWheel() {
     drawSlice(context, centerX, centerY, radius, startAngle, endAngle, slice.color);
 
     // Draw slice label
-    drawLabel(context, centerX, centerY, radius, startAngle, endAngle, slice.color, slice.text, slice.textColor, props.textPosition, props.font);
+    drawLabel(context, centerX, centerY, radius, startAngle, endAngle, slice.color, slice.text, slice.textColor, props.sliceTextPosition, props.sliceFontStyle);
 
   });
 
@@ -387,6 +385,14 @@ watch(() => props.cursorPosition, () => {
 
 watch(() => props.cursorDistance, () => {
   positionCursor();
+});
+
+watch(() => props.sliceTextPosition, () => {
+  drawWheel();
+});
+
+watch(() => props.sliceFontStyle, () => {
+  drawWheel();
 });
 
 onBeforeMount(() => {
