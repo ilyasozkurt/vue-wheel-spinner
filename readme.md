@@ -236,7 +236,7 @@ This project is licensed under the MIT License.
 
 
 ## Additions
-I have added a few more props to make the wheel more cutomizable:
+I have added a few more props to make the wheel more customizable:
 `font`, `textPosition`, `textColor` in `slices`, so the props become (added ones are on the top):
 | Prop                        | Type   | Default          | Description                                                                          |
 |-----------------------------|--------|------------------|--------------------------------------------------------------------------------------|
