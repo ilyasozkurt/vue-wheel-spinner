@@ -70,7 +70,7 @@ const props = defineProps({
   },
   textPosition: {
     type: String,
-    default: 'right'
+    default: 'edge'
   },
 });
 
