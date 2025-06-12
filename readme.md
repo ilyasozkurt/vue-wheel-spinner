@@ -239,3 +239,5 @@ Import and register the component in your Vue component:
 
 ## License
 This project is licensed under the MIT License.
+
+Sponsored by [offday.app](https://trustlocale.com "Discover the best days off to maximize your holiday!")
